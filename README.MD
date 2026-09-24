@@ -59,7 +59,7 @@ Authorization: Bearer <token>
 * **`instructor-token`**: Rol de administrador, con permisos totales, incluyendo eliminaciones.
 * **`technician-token`**: Rol de técnico, con permisos para listar, crear, modificar y cambiar estados, pero sin permisos para eliminar.
 
-## 📚 Endpoints de la API
+## Endpoints de la API
 
 | Método | Ruta                        | Control de Acceso | Descripción                                                                 |
 | ------ | --------------------------- | ----------------- | --------------------------------------------------------------------------- |
@@ -136,15 +136,11 @@ Representa un contrato de datos de entrada específico.
 
 Limita estrictamente lo que el cliente puede enviar al servidor. Por ejemplo, al crear un incidente, el cliente no introduce el `id`, la fecha ni el estado, ya que el backend se encarga de generarlos.
 
-## 💡 Reflexión Final
+## Reflexión Final
 
 ### ¿Qué ventajas ofrece implementar validaciones, autenticación y manejo de errores mediante middlewares?
 
-Centralizar estas validaciones y capas de seguridad en middlewares libera a los controladores de responsabilidades repetitivas y código redundante.
-
-Gracias a esto, los controladores se dedican principalmente a coordinar la lógica de negocio, mientras que los middlewares actúan como filtros independientes que garantizan la integridad de los datos, la seguridad de las rutas y un manejo uniforme de los errores.
-
-Esta organización permite mantener el código limpio, reutilizable, mantenible y fácil de escalar.
+Centralizar estas validaciones y capas de seguridad en middlewares libera a los controladores de responsabilidades repetitivas y código redundante, gracias a esto, los controladores se dedican principalmente a coordinar la lógica de negocio, mientras que los middlewares actúan como filtros independientes que garantizan la integridad de los datos, la seguridad de las rutas y un manejo uniforme de los errores, esta organización permite mantener el código limpio, reutilizable, mantenible y fácil de escalar.
 
 ---
 
