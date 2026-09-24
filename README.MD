@@ -1,17 +1,155 @@
 # IncidentHub API
 
-## 📋 Descripción y Problema Solucionado
-Este proyecto soluciona la gestión desorganizada de incidentes tecnológicos en una organización (como equipos dañados o fallas de red), reemplazando los reportes informales por una API REST estructurada y profesional.
+## Descripción y Problema Solucionado
 
-## 🛠️ Tecnologías
-* Node.js
-* Express
-* TypeScript
-* Persistencia en memoria (arreglos de TypeScript)
+Este proyecto soluciona la gestión desorganizada de incidentes tecnológicos en una organización, como equipos dañados, fallas de red o problemas con impresoras, reemplazando los reportes informales por una API REST estructurada y profesional.
 
-## ⚙️ Instalación y Ejecución
-1. Instalar dependencias:
-   ```bash
-   npm install
-Sistema de AutenticaciónEl proyecto no implementa JWT, sino un sistema de tokens fijos evaluados mediante el encabezado Authorization: Bearer <token>:   instructor-token: Rol de administrador (permisos totales, incluyendo eliminaciones).   technician-token: Rol de técnico (permisos para listar, crear, modificar y cambiar estados, pero bloqueado en borrados).   📚 Endpoints de la APIMétodoRutaControl de AccesoDescripciónGET/api/incidentsPúblicoConsulta el listado completo de incidentes.   GET/api/incidents/criticalPúblicoRetorna únicamente los incidentes de prioridad crítica.   GET/api/incidents/pendingPúblicoFiltra los incidentes abiertos o en proceso.   GET/api/incidents/statsPúblicoRetorna un resumen con estadísticas operacionales calculadas dinámicamente.   GET/api/incidents/:idPúblicoBusca un incidente específico por su ID.   POST/api/incidentsRequiere TokenRegistra un nuevo incidente (autogenera ID, estado y fecha).   PUT/api/incidents/:idRequiere TokenActualiza los datos de un incidente existente.   PATCH/api/incidents/:id/statusRequiere TokenModifica el estado del incidente validando las transiciones permitidas.   DELETE/api/incidents/:idAdmin TokenElimina lógicamente un incidente del sistema.   🛡️ Capa de MiddlewaresLos middlewares permiten interceptar y procesar las peticiones antes de que lleguen a los controladores:Logger: Imprime en consola un registro con la marca de tiempo, método HTTP y la ruta de cada petición entrante.   Request Info: Añade metadatos personalizados (req.requestInfo) para enriquecer la petición con información del momento de la solicitud.   Auth: Verifica la autenticidad del token Bearer enviado en los headers, denegando el acceso (401) si no es válido.   Admin: Evalúa si el usuario autenticado posee privilegios de administrador, bloqueando (403) los intentos de los técnicos.   Validate ID: Comprueba que el parámetro :id recibido en la URL sea estrictamente un número entero positivo.   Validate Incident / Priority / Time: Aseguran que la información del body cumpla con los tipos, catálogos permitidos (LOW, MEDIUM, HIGH, CRITICAL) y rangos de tiempo lógicos[cite: 1] (incluyendo la regla de negocio del Reto 4 que limita los incidentes críticos a un máximo de 60 minutos).Not Found (404): Captura cualquier ruta inexistente en el sistema[cite: 1].Error Middleware: Centraliza la gestión de excepciones transformando cualquier error controlado (AppError) en una respuesta JSON limpia y uniforme[cite: 1].🧠 Model vs DTO (Explicado con mis palabras)Model (Incident): Define la estructura completa y definitiva con la que opera la aplicación internamente. Incluye campos gestionados de forma autónoma por el servidor como el identificador único (id), la fecha exacta de creación (createdAt) y el estado en curso[cite: 1].DTO (CreateIncidentDto, etc.): Representa un contrato de datos de entrada muy específico. Es decir, limita estrictamente lo que el cliente tiene permitido enviar al servidor (por ejemplo, al crear un incidente el cliente jamás introduce un id o una fecha, ya que el backend se encarga de eso)[cite: 1].💡 Reflexión Final¿Qué ventajas ofrece implementar validaciones, autenticación y manejo de errores mediante middlewares en lugar de escribir toda esta lógica directamente dentro de cada controller?
-Centralizar estas validaciones y capas de seguridad en middlewares libera a los controladores de responsabilidades repetitivas y código redundante. Gracias a esto, los controladores se dedican exclusivamente a coordinar la lógica de negocio, mientras que los middlewares actúan como filtros independientes que garantizan la integridad de los datos, la seguridad de las rutas y un manejo uniforme de los errores en toda la aplicación de manera limpia, reutilizable y fácil de escalar[cite: 1].
+## Tecnologías
+
+* **Node.js**
+* **Express**
+* **TypeScript**
+* Persistencia en memoria mediante arreglos de TypeScript.
+* Sin bases de datos relacionales ni ORMs.
+
+## Instalación y Ejecución
+
+### 1. Instalar dependencias
+
+```bash
+npm install
+```
+
+### 2. Iniciar el servidor en modo desarrollo
+
+```bash
+npm run dev
+```
+
+El servidor se ejecutará en:
+
+```text
+http://localhost:3000
+```
+
+### 3. Compilar el proyecto
+
+```bash
+npm run build
+```
+
+Este comando compila el código TypeScript a JavaScript dentro de la carpeta `dist/`.
+
+### 4. Ejecutar la versión compilada
+
+```bash
+npm start
+```
+
+## Sistema de Autenticación
+
+El proyecto no implementa JWT. Utiliza un sistema de tokens fijos enviados mediante el encabezado:
+
+```text
+Authorization: Bearer <token>
+```
+
+### Tokens disponibles
+
+* **`instructor-token`**: Rol de administrador, con permisos totales, incluyendo eliminaciones.
+* **`technician-token`**: Rol de técnico, con permisos para listar, crear, modificar y cambiar estados, pero sin permisos para eliminar.
+
+## 📚 Endpoints de la API
+
+| Método | Ruta                        | Control de Acceso | Descripción                                                                 |
+| ------ | --------------------------- | ----------------- | --------------------------------------------------------------------------- |
+| GET    | `/api/incidents`            | Público           | Consulta el listado completo de incidentes.                                 |
+| GET    | `/api/incidents/critical`   | Público           | Retorna únicamente los incidentes de prioridad crítica.                     |
+| GET    | `/api/incidents/pending`    | Público           | Filtra los incidentes abiertos o en proceso.                                |
+| GET    | `/api/incidents/stats`      | Público           | Retorna estadísticas operacionales calculadas dinámicamente.                |
+| GET    | `/api/incidents/:id`        | Público           | Busca un incidente específico por su ID.                                    |
+| POST   | `/api/incidents`            | Requiere Token    | Registra un nuevo incidente y genera automáticamente su ID, estado y fecha. |
+| PUT    | `/api/incidents/:id`        | Requiere Token    | Actualiza los datos de un incidente existente.                              |
+| PATCH  | `/api/incidents/:id/status` | Requiere Token    | Modifica el estado del incidente validando las transiciones permitidas.     |
+| DELETE | `/api/incidents/:id`        | Admin Token       | Elimina lógicamente un incidente del sistema.                               |
+
+## Capa de Middlewares
+
+Los middlewares permiten interceptar y procesar las peticiones antes de que lleguen a los controladores.
+
+### Logger
+
+Imprime en consola un registro con la marca de tiempo, método HTTP y ruta de cada petición entrante.
+
+### Request Info
+
+Añade metadatos personalizados (`req.requestInfo`) para enriquecer la petición con información relacionada con el momento de la solicitud.
+
+### Auth
+
+Verifica la autenticidad del token Bearer enviado en los headers. Si el token no es válido, deniega el acceso mediante una respuesta `401`.
+
+### Admin
+
+Evalúa si el usuario autenticado posee privilegios de administrador. Los intentos de los técnicos de realizar operaciones administrativas reciben una respuesta `403`.
+
+### Validate ID
+
+Comprueba que el parámetro `:id` recibido en la URL sea estrictamente un número entero positivo.
+
+### Validate Incident / Priority / Time
+
+Asegura que la información del body cumpla con los tipos, catálogos permitidos y rangos de tiempo lógicos.
+
+Las prioridades permitidas son:
+
+* `LOW`
+* `MEDIUM`
+* `HIGH`
+* `CRITICAL`
+
+Además, los incidentes críticos tienen una duración máxima de 60 minutos.
+
+### Not Found (404)
+
+Captura cualquier ruta inexistente en el sistema.
+
+### Error Middleware
+
+Centraliza la gestión de excepciones y transforma los errores controlados (`AppError`) en una respuesta JSON limpia y uniforme.
+
+## Model vs DTO
+
+### Model — `Incident`
+
+Define la estructura completa y definitiva con la que opera la aplicación internamente.
+
+Incluye campos gestionados automáticamente por el servidor, como:
+
+* `id`
+* `createdAt`
+* `status`
+
+### DTO — `CreateIncidentDto`
+
+Representa un contrato de datos de entrada específico.
+
+Limita estrictamente lo que el cliente puede enviar al servidor. Por ejemplo, al crear un incidente, el cliente no introduce el `id`, la fecha ni el estado, ya que el backend se encarga de generarlos.
+
+## 💡 Reflexión Final
+
+### ¿Qué ventajas ofrece implementar validaciones, autenticación y manejo de errores mediante middlewares?
+
+Centralizar estas validaciones y capas de seguridad en middlewares libera a los controladores de responsabilidades repetitivas y código redundante.
+
+Gracias a esto, los controladores se dedican principalmente a coordinar la lógica de negocio, mientras que los middlewares actúan como filtros independientes que garantizan la integridad de los datos, la seguridad de las rutas y un manejo uniforme de los errores.
+
+Esta organización permite mantener el código limpio, reutilizable, mantenible y fácil de escalar.
+
+---
+
+## Proyecto
+
+**IncidentHub API**
+
+API REST desarrollada con **Node.js, Express y TypeScript**.
